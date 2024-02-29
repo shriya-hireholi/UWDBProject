@@ -14,14 +14,19 @@
         <header>
             <nav class="navbar fixed-top">
                 <div class="navbar-nav">
+                {% if is_active%}
                     <a class="nav-item nav-link" href="/logout">Log Out</a>
+                {% else %}
+                    <a class="nav-item nav-link active" href="{{ url_for('login_page') }}">Login/Sign Up</a>
+                {% endif %}
+                <a class="nav-item nav-link active" href="/search">Search</a>
                 </div>
             </nav>
         </header>
     	<div class="container">
 	    	<h1>{% block heading %}{% endblock %}</h1>
 	    	
-	    	{% block body %}
+	    	{% block body %} 
 		    {% endblock %}
 	    </div>
     </body>
