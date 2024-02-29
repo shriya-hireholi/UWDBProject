@@ -82,13 +82,13 @@ def queryTwo(n1, v1, n2, v2):
 def details(isbn):
 	query = f"SELECT * FROM books WHERE isbn={isbn}"
 	ans =db.session.execute(text(query)).fetchone()
-	response = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": 'JkwcGThDCN97xqvW7Stg', "isbns": isbn})
+	''' response = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": 'JkwcGThDCN97xqvW7Stg', "isbns": isbn})
 	sna = response.json()
 	if response.status_code != 200:
-		raise Exception("ERROR: API request unsuccessful.")
-	reviews_query = f"SELECT rating, review, username FROM reviews WHERE isbn = {isbn}"
+		raise Exception("ERROR: API request unsuccessful.") '''
+	reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}" 
 	reviews = db.session.execute(text(reviews_query)).fetchall()
-	return render_template("details.html", res=ans, avg=sna['books'][0]['average_rating'], rating=sna['books'][0]['average_rating'], total=sna['books'][0]['ratings_count'], reviews=reviews)
+	return render_template("details.html", res=ans, reviews=reviews)
 
 @app.route("/logout")
 def logout():
@@ -104,7 +104,7 @@ def review(isbn):
 		rating = request.form.get("rating")
 		content = request.form.get("content")
 		insert_query = f"INSERT INTO reviews (rating, content, username, isbn) VALUES ({rating}, {content}, {username}, {isbn})"
-		db.session.execute()
+		db.session.execute(insert_query).fetchall()
 		db.session.commit()
 	return redirect("/details/"+isbn)
 
