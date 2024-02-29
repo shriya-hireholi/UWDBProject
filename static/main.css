@@ -25,3 +25,34 @@ select {
     cursor: pointer; 
     border-radius: 20px;
 }
+
+.topnav {
+    overflow: hidden;
+    background-color: #333;
+    padding: 15px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.book {
+    width: 200px;
+    margin: 20px;
+    text-align: center;
+}
+
+.book img {
+    max-width: 100%;
+    height: auto;
+}
+
+.book-title {
+    margin-top: 10px;
+    font-weight: bold;
+}
