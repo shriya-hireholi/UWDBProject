@@ -13,3 +13,25 @@
 <li>run the import.py to setup the database</li>
 <li>flask run, to run on localhost, additionally set FLASK_DEBUG to 1 to enable debugger</li>
 </ul>
+
+## To run this project
+
+Clone this repo
+
+Create a virtual environment and activate it.
+
+Install all dependencies
+
+```bash
+pip3 install -r requirements.txt
+```
+
+<hr>
+
+Run the following command:
+```bash
+python3 run.py
+```
+
+<hr>
+
