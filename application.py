@@ -105,19 +105,39 @@ def search_page():
 	top_5_categories = db.session.execute(text(query))
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
+
+def get_reviews_query(username, isbn):
+	query=text("""
+			SELECT rating, review, username, reviews.review_id 
+			FROM Reviews 
+			JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id 
+			JOIN User_Rating ON Reviews.review_id = User_Rating.review_id 
+			JOIN (
+				SELECT user_id, username 
+				FROM Users 
+				WHERE username LIKE :username
+			) AS Subquery ON Subquery.user_id = User_Rating.user_id 
+			WHERE isbn = :isbn;
+		""")
+	result = db.session.execute(query, {"username": username, "isbn": isbn}).fetchall()
+	return result
+
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
 	is_active = request.args.get('is_active') == "True"
-	username = get_session_username()
+	username = get_session_username() or None
+	user_id = None
 
 	query = f"SELECT * FROM books WHERE isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
 
-	if request.method == "POST":
+	if username:
 		user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
 		user_id = db.session.execute(text(user_id_query)).fetchone()[0]
-		query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
-		result = db.session.execute(text(query)).fetchall()
+	
+	result = get_reviews_query(username, isbn)
+
+	if request.method == "POST":
 		if not result:
 			rating = request.form.get("rating")
 			review = request.form.get("content")
@@ -143,15 +163,12 @@ def details(isbn):
 				VALUES ({review_id}, '{isbn}')
 			"""
 			db.session.execute(text(insert_query_book_rating))
-
 			db.session.commit()
 		
 		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
-		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active))
+		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
 
-	reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn} ORDER BY Reviews.review_id DESC" 
-	reviews = db.session.execute(text(reviews_query)).fetchall()
-	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active)
+	return render_template("details.html", res=ans, reviews=result, name=username, is_active=is_active, uid=user_id)
 	
 @app.route("/logout")
 def logout():
@@ -168,6 +185,20 @@ def api(isbn):
 	result = dict(tmp.items())
 	result['average_score'] = float('%.1f'%(result['average_score']))
 	return jsonify(result)
+
+@app.route('/delete/<review_id>', methods=['GET', 'POST'])
+def delete(review_id):
+	isbn=request.args.get("isbn")
+	is_active = request.args.get('is_active') == "True"
+	query=f"DELETE FROM reviews where review_id={review_id};"
+	db.session.execute(text(query))
+	db.session.commit()
+	return redirect(url_for('details', isbn=isbn, is_active=is_active))
+
+
+@app.route('/update/<review_id>', methods=['GET', 'POST'])
+def update(review_id):
+    return
 
 if __name__ == "__main__":
 	app.run(debug=True)
