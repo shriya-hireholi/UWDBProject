@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <form class="form-example" action="{{ url_for('login') }}" method="post">
+    <form class="form-example" action="{{ url_for('signup_page') }}" method="post">
     	<div class="form-group">
         	<input type="text" class="form-control" name="name" placeholder="Enter Your Username">
     	</div>
@@ -17,5 +17,5 @@
     	</div>
         <button type="submit" class="btn btn-primary">Signup</button>
     </form>
-    <a href="/">LogIn instead?</a>
+    <a href="{{ url_for('login_page') }}">LogIn instead?</a>
 {% endblock %}
