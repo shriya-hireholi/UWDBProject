@@ -1,21 +1,18 @@
 {% extends "layout.html" %}
 
 {% block heading %}
-    Sign-up
+    Sign Up
 {% endblock %}
 
 {% block body %}
-    <form class="form-example" action="{{ url_for('signup_page') }}" method="post">
+    <form class="form-example" action="{{ url_for('signup_page') }}" method="post" style="margin-top:20px;margin-bottom:10px">
     	<div class="form-group">
         	<input type="text" class="form-control" name="name" placeholder="Enter Your Username">
     	</div>
     	<div class="form-group">
-        	<input type="email" class="form-control" name="email" placeholder="Enter Your Email">
-    	</div>
-    	<div class="form-group">
         	<input type="password" class="form-control" name="pwd" placeholder="Enter Your Password">
     	</div>
-        <button type="submit" class="btn btn-primary">Signup</button>
+        <button type="submit" class="btn btn-primary">Sign up</button>
     </form>
-    <a href="{{ url_for('login_page') }}">LogIn instead?</a>
+    <a href="{{ url_for('login_page') }}" style="color:rgb(113, 207, 231)">Log in instead?</a>
 {% endblock %}

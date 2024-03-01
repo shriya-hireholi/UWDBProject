@@ -3,16 +3,35 @@
     <head>
         <title>project1</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='main.css')}}">
         <style type="text/css">
             body{
-                background-image: url('../static/images/books_image.jpg');
-                background-color: black;
+                background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../static/images/background.jpg') no-repeat;
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
                 color: white;
             }
+            .home-button {
+                background-color: transparent;
+                border: none !important;
+                color: white;
+                cursor: pointer;
+                font-size: 1.75rem;
+                position: absolute; 
+                top: 20px; 
+                left: 20px;
+                outline: none !important;
+        }
         </style>
     </head>
     <body class="container h-100">
-	    <div class="row h-100 justify-content-center align-items-center">
+        <!-- <a href="/" style="position: absolute; top: 10px; left: 10px; color: white;">Home</a> -->
+        <button class="home-button" onclick="window.location.href='/'">
+            <i class="fas fa-home"></i>
+        </button>
+	    <div class="row h-100 justify-content-center align-items-center" style="width:80%;">
 	        <div class="col-10 col-md-8 col-lg-6" align="center">
 		        <h1>{% block heading %}{% endblock %}</h1>
 
@@ -21,4 +40,4 @@
     		</div>
     	</div>
     </body>
-</html
+</html>
