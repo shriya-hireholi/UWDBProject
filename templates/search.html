@@ -29,7 +29,10 @@
 	<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
 		{% for data in top_5_categories %}
 			<div class="categories">
-				<a href="{{ url_for('search_page', categories=data[0]) }}" style="color: white;">{{ data[0] }}</a>
+				<form action="{{ url_for('search_page') }}" method="post">
+					<input type="hidden" name="categories" value="{{ data[0] }}">
+					<button type="submit" style="background-color: transparent; border: none; color: white;">{{ data[0] }}</button>
+				</form>
 			</div>
 		{% endfor %}
     </div>
