@@ -22,7 +22,7 @@ def home_page():
 	is_active = request.args.get('is_active') == "True"
 	query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
 	get_top_10_books = db.session.execute(text(query))
-	return render_template("search_result.html", ans=get_top_10_books, is_active=is_active)
+	return render_template("home.html", ans=get_top_10_books, is_active=is_active)
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
@@ -53,31 +53,40 @@ def signup_page():
 		return redirect(url_for('home_page', is_active=True))
 	return render_template("signup.html")
 
-@app.route("/find", methods=["POST"])
-def find():
-	isbn = request.form.get("isbn")
-	title = request.form.get("name")
-	author = request.form.get("author")
-	if len(isbn)==0:
-		ans = queryOne("title",title) if len(author)==0 else queryOne("author", author) if len(title)==0 else queryTwo("title", title, "author", author)
-	elif len(title)==0:
-		ans = queryOne("isbn",isbn) if len(author)==0 else queryOne("author", author) if len(isbn)==0 else queryTwo("isbn", isbn, "author", author)
-	elif len(author)==0:
-		ans = queryOne("isbn",isbn) if len(title)==0 else queryOne("title", title) if len(isbn)==0 else queryTwo("isbn", isbn, "title", title)
-	else:
-		query = f"SELECT * FROM books WHERE isbn LIKE '%{isbn}%' AND title LIKE '%{title}%' AND author LIKE '%{author}%'"
-		ans = db.session.execute(text(query)).fetchall()
-	return render_template("search_result.html", ans=ans)
+def query_books(isbn, title, author, categories):
+	if not isbn and not title and not author and not categories:
+		return []
+	conditions = []
+	params = {}
+	if isbn:
+		conditions.append("books.isbn = :isbn")
+		params["isbn"] = f"%{isbn}%"
+	if title:
+		conditions.append("title LIKE :title")
+		params["title"] = f"%{title}%"
+	if author:
+		conditions.append("author LIKE :author")
+		params["author"] = f"%{author}%"
+	if categories:
+		conditions.append("categories LIKE :categories")
+		params["categories"] = f"%{categories}%"
+	query = text("SELECT * FROM books JOIN authors on books.isbn = authors.isbn WHERE {}".format(" AND ".join(conditions)))
+	return db.session.execute(query, params).fetchall()
 
-def queryOne(name, value):
-	query = f"SELECT * FROM books WHERE {name} LIKE '%{value}%'"
-	ans = db.session.execute(text(query)).fetchall()
-	return ans
+@app.route("/search", methods=["POST"])
+def search_page():
 
-def queryTwo(n1, v1, n2, v2):
-	query = f"SELECT * FROM books WHERE {n1} LIKE '%{v1}%' AND {n2} LIKE '%{v2}%'"
-	ans = db.session.execute(text(query)).fetchall()
-	return ans
+	if request.method == "POST":
+		isbn = request.form.get("isbn")
+		title = request.form.get("name")
+		author = request.form.get("author")
+		categories = request.form.get("categories")
+		ans = query_books(isbn, title, author, categories)
+		return render_template("home.html", ans=ans)
+	
+	query = f"SELECT TOP 5 categories, count(*) as categories_count FROM books GROUP BY categories ORDER BY categories_count DESC"
+	top_5_categories = db.session.execute(text(query))
+	return render_template("search.html", top_5_categories=top_5_categories)
 
 @app.route("/details/<isbn>")
 def details(isbn):
