@@ -12,10 +12,10 @@ Session(app)
 
 @app.route("/")
 def check_user_session():
-    is_logged_in = False
-    if session.get("username") is not None:
-        is_logged_in = True
-    return redirect(url_for('home_page', is_active=is_logged_in))
+	is_logged_in = False
+	if session.get("username") is not None:
+		is_logged_in = True
+	return redirect(url_for('home_page', is_active=is_logged_in))
 
 def get_session_username():
 	username = ""
@@ -107,52 +107,68 @@ def search_page():
 
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
-    if request.method == "POST":
-        if session.get("username") is None:
-            return redirect("/login")
-        else:
-            username = session.get("username")
-            user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
-            user_id = db.session.execute(text(user_id_query)).fetchone()[0]
-            query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
-            ans = db.session.execute(text(query)).fetchall()
-            if not ans:
-                rating = request.form.get("rating")
-                review = request.form.get("content")
-                insert_query = f"""
-                    INSERT INTO Reviews (rating, review)
-                    VALUES ({rating}, '{review}')
-                """
-                db.session.execute(text(insert_query))
+	is_active = True
+	username = get_session_username()
+	if username is None:
+		is_active = False
 
+	query = f"SELECT * FROM books WHERE isbn={isbn}"
+	ans = db.session.execute(text(query)).fetchone()
 
-                db.session.commit()
+	if request.method == "POST":
+		user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
+		user_id = db.session.execute(text(user_id_query)).fetchone()[0]
+		query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
+		result = db.session.execute(text(query)).fetchall()
+		if not result:
+			rating = request.form.get("rating")
+			review = request.form.get("content")
+			insert_query = f"""
+				INSERT INTO Reviews (rating, review)
+				VALUES ({rating}, '{review}')
+			"""
+			db.session.execute(text(insert_query))
+			db.session.commit()
 
-        return redirect(url_for('details', isbn=isbn))
-    else:
-        query = f"SELECT * FROM books WHERE isbn={isbn}"
-        ans = db.session.execute(text(query)).fetchone()
-        if not ans:
-            abort(404)  # Return a 404 error if book with given ISBN is not found
-        reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}" 
-        reviews = db.session.execute(text(reviews_query)).fetchall()
-        return render_template("details.html", res=ans, reviews=reviews)
-    
+			get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
+			review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
+
+			insert_query_user_rating = f"""
+				INSERT INTO User_Rating (review_id, user_id)
+				VALUES ({review_id}, {user_id})
+			"""
+			db.session.execute(text(insert_query_user_rating))
+
+			insert_query_book_rating = f"""
+				INSERT INTO Book_Rating (review_id, isbn)
+				VALUES ({review_id}, '{isbn}')
+			"""
+			db.session.execute(text(insert_query_book_rating))
+
+			db.session.commit()
+		
+		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
+		return redirect(url_for('details', isbn=isbn, is_active=is_active))
+
+	reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn} ORDER BY Reviews.review_id DESC" 
+	reviews = db.session.execute(text(reviews_query)).fetchall()
+	return render_template("details.html", res=ans, reviews=reviews, is_active=True)
+	
 @app.route("/logout")
 def logout():
-    session.clear()
-    return redirect("/")
+	session.clear()
+	return redirect("/")
 
 @app.route("/api/<isbn>", methods=['GET'])
 def api(isbn):
-    # query = f
-    row = db.execute("SELECT name, author, year, books.isbn, COUNT(reviews.id) as review_count, AVG(CAST(reviews.rating AS INTEGER)) as average_score FROM books INNER JOIN reviews ON books.isbn = reviews.isbn WHERE books.isbn = :isbn GROUP BY name, author, year, books.isbn", {"isbn": isbn})
-    if row.rowcount != 1:
-        return jsonify({"Error": "No Data for this isbn"}), 422
-    tmp = row.fetchone()
-    result = dict(tmp.items())
-    result['average_score'] = float('%.1f'%(result['average_score']))
-    return jsonify(result)
+	# query = f
+	row = db.execute("SELECT name, author, year, books.isbn, COUNT(reviews.id) as review_count, AVG(CAST(reviews.rating AS INTEGER)) as average_score FROM books INNER JOIN reviews ON books.isbn = reviews.isbn WHERE books.isbn = :isbn GROUP BY name, author, year, books.isbn", {"isbn": isbn})
+	if row.rowcount != 1:
+		return jsonify({"Error": "No Data for this isbn"}), 422
+	tmp = row.fetchone()
+	result = dict(tmp.items())
+	result['average_score'] = float('%.1f'%(result['average_score']))
+	return jsonify(result)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+	app.run(debug=True)
