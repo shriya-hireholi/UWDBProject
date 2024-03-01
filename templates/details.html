@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-	<table class="table text-center">
+	<!-- <table class="table text-center">
 		<tr>
 			<th style="padding: 30px;">ISBN</th>
 			<td style="padding: 30px;">{{ res[0] }}</td>
@@ -65,5 +65,162 @@
     		</li>
     	{% endfor %}
     	</ul>
+    </div> -->
+	<div class="details-container">
+        <div class="left-column">
+            <img src="{{ res[3] }}" alt="Book Thumbnail">
+        </div>
+        <div class="right-column">
+            <div class="book-details">
+                <h2>{{ res[1] }}</h2>
+                <p>{{ res[2] }}</p>
+                <div class="default-rating">
+					<p class="mr-3">
+						{% set rating_int = res[4] | round | int %}
+						{% for i in range(rating_int) %}
+							<span class="star">&#9733;</span>
+						{% endfor %}
+						{% for i in range(5 - rating_int) %}
+							<span class="star">&#9734;</span>
+						{% endfor %}
+					</p>
+					<p>{{ res[4] }}</p>
+				</div>
+                <p>{{ res[6] }}</p>
+                <!-- Add more details as needed -->
+				{% if is_active %}
+					<form class="form-example" action="{{ url_for('details', isbn=res[0], is_active=is_active) }}" method="post">
+						<h6>Review this Book:</h6>
+						<div class="form-group">
+							<label>Rating:</label>
+							<select class="form-control" name="rating">
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+								<option value="4">4</option>
+								<option value="5">5</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>Write a Review:</label>
+							<textarea class="form-control" name="content" rows="4"></textarea>
+						</div>
+						<button type="submit" class="btn btn-primary">Submit Review</button>
+					</form>
+				{% endif %}
+				<br/>
+				<div class="container" style="display: flex; flex-direction: column;">
+					{% if reviews %}
+						<h6>Reviews</h6>
+						<ul class="list-group">
+							{% for review in reviews %}
+							<li class="list-group-item" style="border: none">
+								<div class="row">
+								<!-- Reviewer (Left Column) -->
+								<div class="col-md-3">
+									{{ review[2] }}
+								</div>
+								<!-- Stars and Review (Right Column) -->
+								<div class="col-md-9">
+									{% set rating_int = review[0] | round | int %}
+									<div style="float: left; width: 100%;">
+									{% for i in range(rating_int) %}
+										<span style=" display: inline-block;">&#9733;</span>
+									{% endfor %}
+									</div>
+									<div id="review{{ review[3] }}Content" class="review-content text-content">
+										{{ review[1] }}
+									</div>
+									{% if uid == review[4] %}
+									<div style="margin: 5px 0px; display: flex; align-items: center;">
+										<a href="{{ url_for('delete', review_id=review[3], isbn=res[0], is_active=is_active)}}" class="mr-2" title="Delete"><i class="fas fa-trash"></i></a>
+										<!-- <a href="{{ url_for('update', review_id=review[3], isbn=res[0], is_active=is_active)}}" title="Update"><i class="fas fa-edit"></i></a> -->
+										<!-- <button onclick="toggleEdit('{{ review[3] }}')"><i class="fas fa-edit"></i></button> -->
+										<a href="#" onclick="toggleEdit('{{ review[3] }}', '{{ res[0] }}', '{{ is_active }}')" class="btn btn-link btn-sm" title="Update"><i class="fas fa-edit"></i></a>
+									</div>
+									{% endif %}
+								</div>
+								</div>
+							</li>
+							{% if not loop.last %}
+							<hr style="border-top: 1px solid #000; margin: 5px;">
+							{% endif %}
+							{% endfor %}
+						</ul>
+					{% else %}
+						{% if not is_active %}
+							<p>No reviews for this book yet. <a href="{{ url_for('login_page') }}">Login</a> to add your first review.</p>
+						{% endif %}	
+					{% endif %}					  
+				</div>
+            </div>
+        </div>
     </div>
+	<script>
+		function toggleEdit(reviewId, isbn, is_active) {
+			event.preventDefault();
+			var reviewContent = document.getElementById('review' + reviewId + 'Content');
+			var updateButton = document.querySelector('[onclick="toggleEdit(\'' + reviewId + '\', \'' + isbn + '\', \'' + is_active + '\')"]');
+			var isText = reviewContent.classList.contains('text-content');
+
+			if (isText) {
+				var reviewText = reviewContent.textContent.trim();
+
+				var textarea = document.createElement('textarea');
+				textarea.id = 'editReview' + reviewId;
+				textarea.classList.add('form-control');
+				textarea.textContent = reviewText;
+				reviewContent.innerHTML = '';
+				reviewContent.appendChild(textarea);
+				updateButton.innerHTML = '<i class="fas fa-times"></i>';
+				textarea.focus();
+				textarea.addEventListener('keypress', function(event) {
+					if (event.keyCode === 13) {
+						event.preventDefault();
+						submitReview(reviewId, isbn, is_active);
+					}
+            	});
+			} else {
+				var textarea = document.getElementById('editReview' + reviewId);
+				if (textarea) {
+					var reviewText = textarea.value.trim();
+					reviewContent.textContent = reviewText;
+				}
+
+				updateButton.innerHTML = '<i class="fas fa-edit"></i>';
+			}
+			reviewContent.classList.toggle('text-content');
+		}
+
+		function submitReview(reviewId, isbn, is_active) {
+			var reviewContent = document.getElementById('editReview' + reviewId);
+			var newText;
+			if (reviewContent.tagName.toLowerCase() === 'textarea') {
+				newText = reviewContent.value.trim();
+			} else {
+				newText = reviewContent.textContent.trim();
+			}
+			console.log(newText);
+			var url = 'http://127.0.0.1:5000/update/' + reviewId + '?isbn=' + isbn + '&is_active=' + is_active;
+			fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ updated_review: newText })
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then(data => {
+				console.log(data);
+			})
+			.catch(error => {
+				console.error('There was a problem with the fetch operation:', error);
+			});
+		}
+	</script>
 {% endblock %}
