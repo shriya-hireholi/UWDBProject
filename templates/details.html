@@ -20,18 +20,15 @@
 		</tr>
 		<tr>
 			<th style="padding: 30px;">Year</th>
-			<td style="padding: 30px;">{{ res[3] }}</td>
+			<td style="padding: 30px;">{{ res[5] }}</td>
 		</tr>
 		<tr>
-			<th style="padding: 30px;">Goodreads Rating</th>
-			<td style="padding: 30px;">{{ rating }}</td>
-		</tr>
-		<tr>
-			<th style="padding: 30px;">Total Ratings</th>
-			<td style="padding: 30px;">{{ total }}</td>
+			<th style="padding: 30px;">Average Rating</th>
+			<td style="padding: 30px;">{{ res[4] }}</td>
 		</tr>
 	</table>
-	<form class="form-example" action="{{ url_for('review', isbn=res[0]) }}" method="post">
+	{% if is_active %}
+	<form class="form-example" action="{{ url_for('details', isbn=res[0]) }}" method="post">
     	<h6>Review this Book:</h6>
     	<div class="form-group">
 	    	<label>Rating:</label>
@@ -49,6 +46,7 @@
     	</div>
         <button type="submit" class="btn btn-primary">Submit Review</button>
     </form>
+	{% endif %}
     <br/>
     <div class="container">
     	<ul class="list-group">

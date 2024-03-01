@@ -112,28 +112,19 @@ def details(isbn):
             return redirect("/login")
         else:
             username = session.get("username")
-            query = f"SELECT * FROM reviews WHERE isbn = {isbn} AND username LIKE '%{username}%'"
+            user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
+            user_id = db.session.execute(text(user_id_query)).fetchone()[0]
+            query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
             ans = db.session.execute(text(query)).fetchall()
             if not ans:
                 rating = request.form.get("rating")
-                review = request.form.get("review")
+                review = request.form.get("content")
                 insert_query = f"""
                     INSERT INTO Reviews (rating, review)
                     VALUES ({rating}, '{review}')
                 """
                 db.session.execute(text(insert_query))
 
-                insert_query_user_rating = f"""
-                    INSERT INTO UserRating (review_id, user_id)
-                    VALUES ({review_id}, (SELECT user_id FROM Users WHERE username = '{username}'))
-                """
-                db.session.execute(text(insert_query_user_rating))
-
-                insert_query_book_rating = f"""
-                    INSERT INTO BookRating (review_id, isbn)
-                    VALUES ({review_id}, {isbn})
-                """
-                db.session.execute(text(insert_query_book_rating))
 
                 db.session.commit()
 
