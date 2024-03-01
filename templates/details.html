@@ -5,67 +5,6 @@
 {% endblock %}
 
 {% block body %}
-	<!-- <table class="table text-center">
-		<tr>
-			<th style="padding: 30px;">ISBN</th>
-			<td style="padding: 30px;">{{ res[0] }}</td>
-		</tr>
-		<tr>
-			<th style="padding: 30px;">Book</th>
-			<td style="padding: 30px;">{{ res[1] }}</td>
-		</tr>
-		<tr>
-			<th style="padding: 30px;">Author</th>
-			<td style="padding: 30px;">{{ res[2] }}</td>
-		</tr>
-		<tr>
-			<th style="padding: 30px;">Year</th>
-			<td style="padding: 30px;">{{ res[5] }}</td>
-		</tr>
-		<tr>
-			<th style="padding: 30px;">Average Rating</th>
-			<td style="padding: 30px;">{{ res[4] }}</td>
-		</tr>
-	</table>
-	{% if is_active %}
-		<form class="form-example" action="{{ url_for('details', isbn=res[0], is_active=is_active) }}" method="post">
-			<h6>Review this Book:</h6>
-			<div class="form-group">
-				<label>Rating:</label>
-				<select class="form-control" name="rating">
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-					<option value="5">5</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<label>Write a Review:</label>
-				<textarea class="form-control" name="content" rows="4"></textarea>
-			</div>
-			<button type="submit" class="btn btn-primary">Submit Review</button>
-		</form>
-	{% endif %}
-    <br/>
-    <div class="container">
-    	<ul class="list-group">
-    	{% for review in reviews %}
-    		<li class="list-group-item text-center m-3">
-				{{ review[2] }} rated it {{ review[0] }}&#9733; and said {{ review[1] }}
-				{% if uid == review[4] %}
-					<tr>
-						<td>
-							<a href="{{ url_for('delete', review_id=review[3], isbn=res[0], is_active=is_active)}}">Delete</a>
-							<br>
-							<a href="{{ url_for('update', review_id=review[3], isbn=res[0], is_active=is_active)}}">Update</a>
-						</td>
-					</tr>
-				{% endif %}
-    		</li>
-    	{% endfor %}
-    	</ul>
-    </div> -->
 	<div class="details-container">
         <div class="left-column">
             <img src="{{ res[3] }}" alt="Book Thumbnail">
