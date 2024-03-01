@@ -106,7 +106,7 @@ def search_page():
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
 
-def get_reviews_query(username, isbn):
+def get_reviews_query(isbn):
 	query=text("""
 			SELECT rating, review, username, reviews.review_id, User_Rating.user_id
 			FROM Reviews 
@@ -115,7 +115,7 @@ def get_reviews_query(username, isbn):
 			JOIN Users ON User_Rating.user_id = Users.user_id
 			WHERE isbn = :isbn;
 		""")
-	result = db.session.execute(query, {"username": username, "isbn": isbn}).fetchall()
+	result = db.session.execute(query, {"isbn": isbn}).fetchall()
 	return result
 
 @app.route("/details/<isbn>", methods=["GET", "POST"])
@@ -130,10 +130,11 @@ def details(isbn):
 	if username:
 		user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
 		user_id = db.session.execute(text(user_id_query)).fetchone()[0]
-	
-	result = get_reviews_query(username, isbn)
 
+	reviews = get_reviews_query(isbn)
 	if request.method == "POST":
+		query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
+		result = db.session.execute(text(query)).fetchall()
 		if not result:
 			rating = request.form.get("rating")
 			review = request.form.get("content")
@@ -164,7 +165,7 @@ def details(isbn):
 		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
 		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
 
-	return render_template("details.html", res=ans, reviews=result, name=username, is_active=is_active, uid=user_id)
+	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active, uid=user_id)
 	
 @app.route("/logout")
 def logout():
