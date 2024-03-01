@@ -4,7 +4,8 @@ from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
 from flask import abort
-
+import pandas as pd
+from sqlalchemy.exc import IntegrityError
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -91,7 +92,7 @@ def query_books(isbn, title, author, categories):
 
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
-	
+	add_last_50_rows()
 	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
@@ -104,6 +105,14 @@ def search_page():
 	query = f"SELECT TOP 5 categories, count(*) as categories_count FROM books GROUP BY categories ORDER BY categories_count DESC"
 	top_5_categories = db.session.execute(text(query))
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
+
+def update_average_rating(isbn):
+    average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
+    average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
+
+    update_average_rating_query = f"UPDATE Books SET average_rating = {average_rating} WHERE isbn = {isbn}"
+    db.session.execute(text(update_average_rating_query))
+    db.session.commit()
 
 
 def get_reviews_query(isbn):
@@ -161,6 +170,8 @@ def details(isbn):
 			"""
 			db.session.execute(text(insert_query_book_rating))
 			db.session.commit()
+
+			update_average_rating(isbn)
 		
 		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
 		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
