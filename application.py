@@ -3,6 +3,7 @@ from flask import Flask, session, render_template, request, redirect, jsonify, u
 from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
+from flask import abort
 
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
@@ -111,17 +112,16 @@ def details(isbn):
             return redirect("/login")
         else:
             username = session.get("username")
-            query = f"SELECT * FROM reviews WHERE isbn = {isbn} AND username = {username}"
+            query = f"SELECT * FROM reviews WHERE isbn = {isbn} AND username LIKE '%{username}%'"
             ans = db.session.execute(text(query)).fetchall()
-            if ans == []:
+            if not ans:
                 rating = request.form.get("rating")
                 review = request.form.get("review")
                 insert_query = f"""
                     INSERT INTO Reviews (rating, review)
                     VALUES ({rating}, '{review}')
-                    RETURNING review_id
                 """
-                review_id = db.session.execute(text(insert_query)).fetchone()[0]
+                db.session.execute(text(insert_query))
 
                 insert_query_user_rating = f"""
                     INSERT INTO UserRating (review_id, user_id)
@@ -131,20 +131,22 @@ def details(isbn):
 
                 insert_query_book_rating = f"""
                     INSERT INTO BookRating (review_id, isbn)
-                    VALUES ({review_id}, '{isbn}')
+                    VALUES ({review_id}, {isbn})
                 """
                 db.session.execute(text(insert_query_book_rating))
 
                 db.session.commit()
 
-        return redirect("/details/"+isbn)
+        return redirect(url_for('details', isbn=isbn))
     else:
         query = f"SELECT * FROM books WHERE isbn={isbn}"
-        ans =db.session.execute(text(query)).fetchone()
+        ans = db.session.execute(text(query)).fetchone()
+        if not ans:
+            abort(404)  # Return a 404 error if book with given ISBN is not found
         reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}" 
         reviews = db.session.execute(text(reviews_query)).fetchall()
         return render_template("details.html", res=ans, reviews=reviews)
-
+    
 @app.route("/logout")
 def logout():
     session.clear()
