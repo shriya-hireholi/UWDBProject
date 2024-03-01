@@ -3,9 +3,8 @@ from flask import Flask, session, render_template, request, redirect, jsonify, u
 from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
-from flask import abort
-import pandas as pd
-from sqlalchemy.exc import IntegrityError
+
+
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -28,7 +27,7 @@ def get_session_username():
 def home_page():
 	username = get_session_username()
 	is_active = request.args.get('is_active') == "True"
-	query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
+	query = f"SELECT * FROM books ORDER BY average_rating DESC;"
 	get_top_10_books = db.session.execute(text(query))
 	return render_template("home.html", ans=get_top_10_books, is_active=is_active, heading="Book List", name=username)
 
@@ -92,7 +91,6 @@ def query_books(isbn, title, author, categories):
 
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
-	add_last_50_rows()
 	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
@@ -133,7 +131,7 @@ def details(isbn):
 	username = get_session_username() or None
 	user_id = None
 
-	query = f"SELECT * FROM books WHERE isbn={isbn}"
+	query = f"SELECT * FROM books JOIN authors ON books.isbn = authors.isbn WHERE books.isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
 
 	if username:
@@ -185,7 +183,6 @@ def logout():
 
 @app.route("/api/<isbn>", methods=['GET'])
 def api(isbn):
-	# query = f
 	row = db.execute("SELECT name, author, year, books.isbn, COUNT(reviews.id) as review_count, AVG(CAST(reviews.rating AS INTEGER)) as average_score FROM books INNER JOIN reviews ON books.isbn = reviews.isbn WHERE books.isbn = :isbn GROUP BY name, author, year, books.isbn", {"isbn": isbn})
 	if row.rowcount != 1:
 		return jsonify({"Error": "No Data for this isbn"}), 422
@@ -194,7 +191,7 @@ def api(isbn):
 	result['average_score'] = float('%.1f'%(result['average_score']))
 	return jsonify(result)
 
-@app.route('/delete/<review_id>', methods=['GET', 'POST'])
+@app.route('/delete/<review_id>')
 def delete(review_id):
 	isbn=request.args.get("isbn")
 	is_active = request.args.get('is_active') == "True"
@@ -208,10 +205,11 @@ def delete(review_id):
 def update(review_id):
 	isbn=request.args.get("isbn")
 	is_active = request.args.get('is_active') == "True"
-	updated_review = request.args.get('updated_review')
-	query=f"UPDATE reviews SET review = {updated_review} WHERE review_id={review_id};"
-	db.session.execute(text(query))
-	db.session.commit()
+	if request.method == "POST":
+		updated_review = request.get_json().get('updated_review')
+		query=f"UPDATE reviews SET review = '{updated_review}' WHERE review_id={review_id};"
+		db.session.execute(text(query))
+		db.session.commit()
 	return redirect(url_for('details', isbn=isbn, is_active=is_active))
 
 if __name__ == "__main__":

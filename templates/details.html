@@ -12,6 +12,7 @@
         <div class="right-column">
             <div class="book-details">
                 <h2>{{ res[1] }}</h2>
+				<p><i>{{ res[8] }}</i></p>
                 <p>{{ res[2] }}</p>
                 <div class="default-rating">
 					<p class="mr-3">
@@ -139,7 +140,6 @@
 			} else {
 				newText = reviewContent.textContent.trim();
 			}
-			console.log(newText);
 			var url = 'http://127.0.0.1:5000/update/' + reviewId + '?isbn=' + isbn + '&is_active=' + is_active;
 			fetch(url, {
 			method: 'POST',
@@ -152,10 +152,7 @@
 				if (!response.ok) {
 					throw new Error('Network response was not ok');
 				}
-				return response.json();
-			})
-			.then(data => {
-				console.log(data);
+				location.reload()
 			})
 			.catch(error => {
 				console.error('There was a problem with the fetch operation:', error);
