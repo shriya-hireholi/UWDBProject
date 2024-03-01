@@ -152,7 +152,7 @@ def details(isbn):
 
 	reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn} ORDER BY Reviews.review_id DESC" 
 	reviews = db.session.execute(text(reviews_query)).fetchall()
-	return render_template("details.html", res=ans, reviews=reviews, is_active=True)
+	return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
 	
 @app.route("/logout")
 def logout():
