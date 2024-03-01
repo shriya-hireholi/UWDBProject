@@ -4,7 +4,8 @@ from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
 from flask import abort
-
+import pandas as pd
+from sqlalchemy.exc import IntegrityError
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -91,7 +92,7 @@ def query_books(isbn, title, author, categories):
 
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
-	
+	add_last_50_rows()
 	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
@@ -109,7 +110,6 @@ def update_average_rating(isbn):
     average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
     average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
 
-    # Update average_rating in the Books table
     update_average_rating_query = f"UPDATE Books SET average_rating = {average_rating} WHERE isbn = {isbn}"
     db.session.execute(text(update_average_rating_query))
     db.session.commit()
