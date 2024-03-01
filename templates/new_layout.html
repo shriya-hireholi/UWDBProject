@@ -19,7 +19,12 @@
     </head>
     <body>
         <header>
-            <nav class="topnav fixed-top">
+            <nav class="topnav fixed-top d-flex justify-content-between">
+                {% if is_active%}
+                <div class="welcome-text">
+                    Welcome {{ name }}!
+                </div>
+                {% endif %}
                 <div class="navbar-nav ml-auto d-flex flex-row-reverse">
                 {% if is_active%}
                     <a class="btn btn-outline-primary" href="/logout">Log Out</a>

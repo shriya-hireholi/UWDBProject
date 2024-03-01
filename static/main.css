@@ -22,7 +22,6 @@ select {
     font-family: cursive; 
     padding: 8px 12px; 
     margin: 5px; 
-    cursor: pointer; 
     border-radius: 20px;
 }
 
@@ -55,4 +54,20 @@ select {
 .book-title {
     margin-top: 10px;
     font-weight: bold;
+}
+
+.cat-button {
+    background-color: transparent; 
+    border: none !important; 
+    color: white; 
+    outline: none !important; 
+    cursor: pointer;
+}
+
+.welcome-text {
+    padding: 0.5rem 1rem; 
+    color: white;
+    font-family: 'Trocchi', serif;
+    font-weight: bold;
+    font-size: 17px;
 }

@@ -9,7 +9,7 @@
 		<div class="form-group">
 			<label for="selection"><i>Select a search option:</i></label>
 			<select name="booksearch" id="booksearch" onchange="toggleInputFields()">
-			<option value="isdn">ISBN</option>
+			<option value="isbn">ISBN</option>
 			<option value="title" selected>Book name</option>
 			<option value="author">Author name</option>
 			</select>
@@ -31,15 +31,13 @@
 			<div class="categories">
 				<form action="{{ url_for('search_page') }}" method="post">
 					<input type="hidden" name="categories" value="{{ data[0] }}">
-					<button type="submit" style="background-color: transparent; border: none; color: white;">{{ data[0] }}</button>
+					<button class="cat-button" type="submit">{{ data[0] }}</button>
 				</form>
 			</div>
 		{% endfor %}
     </div>
 	<script>
-        function handleClick(chipName) {
-            alert('Clicked ' + chipName);
-        }
+
 		function toggleInputFields() {
 			var selectBox = document.getElementById("booksearch");
 			var isbnField = document.getElementById("isbnField");
@@ -52,7 +50,7 @@
 			authorField.style.display = "none";
 
 			// Show the input field based on the selected option
-			if (selectBox.value === "isdn") {
+			if (selectBox.value === "isbn") {
 				isbnField.style.display = "block";
 			} else if (selectBox.value === "title") {
 				nameField.style.display = "block";
@@ -60,9 +58,9 @@
 				authorField.style.display = "block";
 			}
 		}
-
-// Calling the function initially to show the correct input field based on the default selection
-toggleInputFields();
+		
+		// Calling the function initially to show the correct input field based on the default selection
+		toggleInputFields();
     </script>
     <!-- <form action="{{ url_for('logout') }}" class="form-example">
 	    <button type="submit" class="btn btn-primary mt-2">Logout</button>
