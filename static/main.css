@@ -71,3 +71,39 @@ select {
     font-weight: bold;
     font-size: 17px;
 }
+
+.details-container {
+    display: flex;
+    height: 90%;
+    overflow: hidden;
+}
+.left-column {
+    width: 30%;
+    background-color: transparent;
+    overflow: hidden;
+    text-align: center;
+    height: 50%;
+    padding-top: 20px;
+}
+.right-column {
+    width: 70%;
+    padding: 20px;
+}
+.left-column img {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+}
+
+.book-details {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.default-rating{
+    display: flex;
+    flex-direction: row;
+}
