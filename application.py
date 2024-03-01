@@ -73,7 +73,7 @@ def query_books(isbn, title, author, categories):
 	query = text("SELECT * FROM books JOIN authors on books.isbn = authors.isbn WHERE {}".format(" AND ".join(conditions)))
 	return db.session.execute(query, params).fetchall()
 
-@app.route("/search", methods=["POST"])
+@app.route("/search", methods=["GET", "POST"])
 def search_page():
 
 	if request.method == "POST":
@@ -81,6 +81,9 @@ def search_page():
 		title = request.form.get("name")
 		author = request.form.get("author")
 		categories = request.form.get("categories")
+		print("*************")
+		print(categories)
+		print("*************")
 		ans = query_books(isbn, title, author, categories)
 		return render_template("home.html", ans=ans)
 	

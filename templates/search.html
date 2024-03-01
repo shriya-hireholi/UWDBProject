@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-	<form class="form-example" action="{{ url_for('find') }}" method="post" style="margin-top:20px">
+	<form class="form-example" action="{{ url_for('search_page') }}" method="post" style="margin-top:20px">
 		<div class="form-group">
 			<label for="selection"><i>Select a search option:</i></label>
 			<select name="booksearch" id="booksearch" onchange="toggleInputFields()">
@@ -27,10 +27,11 @@
     </form>
 	<label for="selection"><i>Search from our top categories</i></label>
 	<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-		{% for data in categories %}
-			<div class="categories" onclick="handleClick('Chip 1')">{{ data }}</div>
+		{% for data in top_5_categories %}
+			<div class="categories">
+				<a href="{{ url_for('search_page', categories=data[0]) }}" style="color: white;">{{ data[0] }}</a>
+			</div>
 		{% endfor %}
-		<!-- <div class="categories" onclick="handleClick('Chip 1')">Chiip 1</div> -->
     </div>
 	<script>
         function handleClick(chipName) {
