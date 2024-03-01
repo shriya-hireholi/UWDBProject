@@ -11,47 +11,47 @@ Session(app)
 
 @app.route("/")
 def check_user_session():
-	is_logged_in = False
-	if session.get("username") is not None:
-		is_logged_in = True
-	return redirect(url_for('home_page', is_active=is_logged_in))
+    is_logged_in = False
+    if session.get("username") is not None:
+        is_logged_in = True
+    return redirect(url_for('home_page', is_active=is_logged_in))
 
 
 @app.route("/temp_home", methods=["GET", "POST"])
 def home_page():
-	is_active = request.args.get('is_active') == "True"
-	query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
-	get_top_10_books = db.session.execute(text(query))
-	return render_template("search_result.html", ans=get_top_10_books, is_active=is_active)
+    is_active = request.args.get('is_active') == "True"
+    query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
+    get_top_10_books = db.session.execute(text(query))
+    return render_template("search_result.html", ans=get_top_10_books, is_active=is_active)
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
-	session.clear()
-	user_name = request.form.get("name")
-	user_password = request.form.get("pwd")
-	print(user_name)
-	print(user_password)
-	if user_name and user_password:
-		query = f"SELECT user_password FROM users WHERE username LIKE '%{user_name}%';"
-		password = db.session.execute(text(query)).fetchone()
-		if password is not None and user_password == password[0]:
-			session["username"] = user_name
-			return redirect(url_for('home_page', is_active=True))
-		else:
-			return(redirect(url_for('signup_page')))
-	return render_template("login.html")
+    session.clear()
+    user_name = request.form.get("name")
+    user_password = request.form.get("pwd")
+    print(user_name)
+    print(user_password)
+    if user_name and user_password:
+        query = f"SELECT user_password FROM users WHERE username LIKE '%{user_name}%';"
+        password = db.session.execute(text(query)).fetchone()
+        if password is not None and user_password == password[0]:
+            session["username"] = user_name
+            return redirect(url_for('home_page', is_active=True))
+        else:
+            return redirect(url_for('signup_page'))
+    return render_template("login.html")
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup_page():
-	user_name = request.form.get("name")
-	user_password = request.form.get("pwd")
-	if user_name and user_password:
-		query = text("INSERT INTO users (username, user_password) VALUES (:username, :user_password);")
-		db.session.execute(query,{"username": user_name, "user_password": user_password})
-		db.session.commit()
-		session["username"] = user_name
-		return redirect(url_for('home_page', is_active=True))
-	return render_template("signup.html")
+    user_name = request.form.get("name")
+    user_password = request.form.get("pwd")
+    if user_name and user_password:
+        query = text("INSERT INTO users (username, user_password) VALUES (:username, :user_password);")
+        db.session.execute(query,{"username": user_name, "user_password": user_password})
+        db.session.commit()
+        session["username"] = user_name
+        return redirect(url_for('home_page', is_active=True))
+    return render_template("signup.html")
 
 @app.route("/find", methods=["POST"])
 def find():
@@ -81,33 +81,49 @@ def queryTwo(n1, v1, n2, v2):
 
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
-	query = f"SELECT * FROM books WHERE isbn={isbn}"
-	ans =db.session.execute(text(query)).fetchone()
-	# response = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": 'JkwcGThDCN97xqvW7Stg', "isbns": isbn})
-	# sna = response.json()
-	# if response.status_code != 200:
-	# 	raise Exception("ERROR: API request unsuccessful.")
-	reviews_query = f"SELECT rating, review, username FROM reviews WHERE isbn = {isbn}"
-	reviews = db.session.execute(text(reviews_query)).fetchall()
-	return render_template("details.html", res=ans, avg=sna['books'][0]['average_rating'], rating=sna['books'][0]['average_rating'], total=sna['books'][0]['ratings_count'], reviews=reviews)
+    if request.method == "POST":
+        if session.get("username") is None:
+            return redirect("/login")
+        else:
+            username = session.get("username")
+            query = f"SELECT * FROM reviews WHERE isbn = {isbn} AND username = {username}"
+            ans = db.session.execute(text(query)).fetchall()
+            if ans == []:
+                rating = request.form.get("rating")
+                review = request.form.get("review")
+                insert_query = f"""
+                    INSERT INTO Reviews (rating, review)
+                    VALUES ({rating}, '{review}')
+                    RETURNING review_id
+                """
+                review_id = db.session.execute(text(insert_query)).fetchone()[0]
+
+                insert_query_user_rating = f"""
+                    INSERT INTO UserRating (review_id, user_id)
+                    VALUES ({review_id}, (SELECT user_id FROM Users WHERE username = '{username}'))
+                """
+                db.session.execute(text(insert_query_user_rating))
+
+                insert_query_book_rating = f"""
+                    INSERT INTO BookRating (review_id, isbn)
+                    VALUES ({review_id}, '{isbn}')
+                """
+                db.session.execute(text(insert_query_book_rating))
+
+                db.session.commit()
+
+        return redirect("/details/"+isbn)
+    else:
+        query = f"SELECT * FROM books WHERE isbn={isbn}"
+        ans =db.session.execute(text(query)).fetchone()
+        reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}" 
+        reviews = db.session.execute(text(reviews_query)).fetchall()
+        return render_template("details.html", res=ans, reviews=reviews)
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
-
-@app.route("/review/<isbn>", methods=["POST"])
-def review(isbn):
-	username = session.get("username")
-	query = f"SELECT * FROM reviews WHERE isbn = {isbn} AND username = {username}"
-	ans = db.session.execute(text(query)).fetchall()
-	if ans == []:
-		rating = request.form.get("rating")
-		content = request.form.get("content")
-		insert_query = f"INSERT INTO reviews (rating, content, username, isbn) VALUES ({rating}, {content}, {username}, {isbn})"
-		db.session.execute()
-		db.session.commit()
-	return redirect("/details/"+isbn)
 
 @app.route("/api/<isbn>", methods=['GET'])
 def api(isbn):
