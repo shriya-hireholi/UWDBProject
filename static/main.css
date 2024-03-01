@@ -1,0 +1,58 @@
+label {
+    display: block;
+    margin-bottom:10px;
+    font-weight:10px; 
+    margin-top: 25px;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.categories {
+    background: linear-gradient(to bottom, #4f8f5e, #24a3a7); 
+    color: white; 
+    font-family: cursive; 
+    padding: 8px 12px; 
+    margin: 5px; 
+    cursor: pointer; 
+    border-radius: 20px;
+}
+
+.topnav {
+    overflow: hidden;
+    background-color: #333;
+    padding: 15px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.book {
+    width: 200px;
+    margin: 20px;
+    text-align: center;
+}
+
+.book img {
+    max-width: 100%;
+    height: auto;
+}
+
+.book-title {
+    margin-top: 10px;
+    font-weight: bold;
+}

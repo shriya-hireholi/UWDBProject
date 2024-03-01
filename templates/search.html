@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+    Welcome {{ name }}
+{% endblock %}
+
+{% block body %}
+	<form class="form-example" action="{{ url_for('find') }}" method="post" style="margin-top:20px">
+		<div class="form-group">
+			<label for="selection"><i>Select a search option:</i></label>
+			<select name="booksearch" id="booksearch" onchange="toggleInputFields()">
+			<option value="isdn">ISBN</option>
+			<option value="title" selected>Book name</option>
+			<option value="author">Author name</option>
+			</select>
+		</div>
+    	<div class="form-group" id="isbnField">
+        	<input type="text" class="form-control" name="isbn" placeholder="ISBN code">
+    	</div>
+    	<div class="form-group" id="nameField" style="display:none;">
+        	<input type="text" class="form-control" name="name" placeholder="Name of Book">
+    	</div>
+    	<div class="form-group" id="authorField" style="display:none;">
+        	<input type="text" class="form-control" name="author" placeholder="Name of Author">
+    	</div>
+        <button type="submit" class="btn btn-primary" style="margin-top:10px">Search</button>
+    </form>
+	<label for="selection"><i>Search from our top categories</i></label>
+	<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+		{% for data in categories %}
+			<div class="categories" onclick="handleClick('Chip 1')">{{ data }}</div>
+		{% endfor %}
+		<!-- <div class="categories" onclick="handleClick('Chip 1')">Chiip 1</div> -->
+    </div>
+	<script>
+        function handleClick(chipName) {
+            alert('Clicked ' + chipName);
+        }
+		function toggleInputFields() {
+			var selectBox = document.getElementById("booksearch");
+			var isbnField = document.getElementById("isbnField");
+			var nameField = document.getElementById("nameField");
+			var authorField = document.getElementById("authorField");
+
+			// Hide all input fields
+			isbnField.style.display = "none";
+			nameField.style.display = "none";
+			authorField.style.display = "none";
+
+			// Show the input field based on the selected option
+			if (selectBox.value === "isdn") {
+				isbnField.style.display = "block";
+			} else if (selectBox.value === "title") {
+				nameField.style.display = "block";
+			} else if (selectBox.value === "author") {
+				authorField.style.display = "block";
+			}
+		}
+
+// Calling the function initially to show the correct input field based on the default selection
+toggleInputFields();
+    </script>
+    <!-- <form action="{{ url_for('logout') }}" class="form-example">
+	    <button type="submit" class="btn btn-primary mt-2">Logout</button>
+	</form> -->
+{% endblock %}
