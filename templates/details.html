@@ -26,6 +26,14 @@
 			<th style="padding: 30px;">Average Rating</th>
 			<td style="padding: 30px;">{{ res[4] }}</td>
 		</tr>
+		<tr>
+			<th style="padding: 30px;">Thumbnail</th>
+			<td style="padding: 30px;">{{ res[3] }}</td>
+		</tr>
+		<tr>
+			<th style="padding: 30px;">Decription</th>
+			<td style="padding: 30px;">{{ res[6] }}</td>
+		</tr>
 	</table>
 	{% if is_active %}
 	<form class="form-example" action="{{ url_for('details', isbn=res[0]) }}" method="post">

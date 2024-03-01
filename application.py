@@ -105,13 +105,23 @@ def search_page():
 	top_5_categories = db.session.execute(text(query))
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
+def update_average_rating(isbn):
+    average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
+    average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
+
+    # Update average_rating in the Books table
+    update_average_rating_query = f"UPDATE Books SET average_rating = {average_rating} WHERE isbn = {isbn}"
+    db.session.execute(text(update_average_rating_query))
+    db.session.commit()
+
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
-	is_active = True
+	is_active = False
 	username = get_session_username()
-	if username is None:
-		is_active = False
-
+	print(username)
+	if username is not None:
+		is_active = True
+	print(is_active)
 	query = f"SELECT * FROM books WHERE isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
 
@@ -146,6 +156,8 @@ def details(isbn):
 			db.session.execute(text(insert_query_book_rating))
 
 			db.session.commit()
+
+			update_average_rating(isbn)
 		
 		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
 		return redirect(url_for('details', isbn=isbn, is_active=is_active))
@@ -169,6 +181,8 @@ def api(isbn):
 	result = dict(tmp.items())
 	result['average_score'] = float('%.1f'%(result['average_score']))
 	return jsonify(result)
+
+def calculate_average()
 
 if __name__ == "__main__":
 	app.run(debug=True)
