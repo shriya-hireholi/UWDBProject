@@ -16,22 +16,27 @@ def check_user_session():
 		is_logged_in = True
 	return redirect(url_for('home_page', is_active=is_logged_in))
 
+def get_session_username():
+	username = ""
+	if session.get("username") is not None:
+		username = session.get("username")
+	return username
 
 @app.route("/temp_home", methods=["GET", "POST"])
 def home_page():
+	username = get_session_username()
 	is_active = request.args.get('is_active') == "True"
 	query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
 	get_top_10_books = db.session.execute(text(query))
-	return render_template("home.html", ans=get_top_10_books, is_active=is_active)
+	return render_template("home.html", ans=get_top_10_books, is_active=is_active, heading="Book List", name=username)
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
 	session.clear()
-	user_name = request.form.get("name")
-	user_password = request.form.get("pwd")
-	print(user_name)
-	print(user_password)
-	if user_name and user_password:
+
+	if request.method == "POST":
+		user_name = request.form.get("name")
+		user_password = request.form.get("pwd")
 		query = f"SELECT user_password FROM users WHERE username LIKE '%{user_name}%';"
 		password = db.session.execute(text(query)).fetchone()
 		if password is not None and user_password == password[0]:
@@ -43,14 +48,16 @@ def login_page():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup_page():
-	user_name = request.form.get("name")
-	user_password = request.form.get("pwd")
-	if user_name and user_password:
-		query = text("INSERT INTO users (username, user_password) VALUES (:username, :user_password);")
-		db.session.execute(query,{"username": user_name, "user_password": user_password})
-		db.session.commit()
-		session["username"] = user_name
-		return redirect(url_for('home_page', is_active=True))
+
+	if request.method == "POST":
+		user_name = request.form.get("name")
+		user_password = request.form.get("pwd")
+		if user_name and user_password:
+			query = text("INSERT INTO users (username, user_password) VALUES (:username, :user_password);")
+			db.session.execute(query,{"username": user_name, "user_password": user_password})
+			db.session.commit()
+			session["username"] = user_name
+			return redirect(url_for('home_page', is_active=True))
 	return render_template("signup.html")
 
 def query_books(isbn, title, author, categories):
@@ -70,26 +77,32 @@ def query_books(isbn, title, author, categories):
 	if categories:
 		conditions.append("categories LIKE :categories")
 		params["categories"] = f"%{categories}%"
-	query = text("SELECT * FROM books JOIN authors on books.isbn = authors.isbn WHERE {}".format(" AND ".join(conditions)))
+	query = text("""
+			  SELECT *
+			  FROM books
+			  WHERE isbn IN (
+				SELECT DISTINCT books.isbn
+				FROM books
+				JOIN authors ON books.isbn = authors.isbn
+				WHERE {});""".format(" AND ".join(conditions))
+			)
 	return db.session.execute(query, params).fetchall()
 
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
-
+	
+	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
 		title = request.form.get("name")
 		author = request.form.get("author")
 		categories = request.form.get("categories")
-		print("*************")
-		print(categories)
-		print("*************")
 		ans = query_books(isbn, title, author, categories)
-		return render_template("home.html", ans=ans)
+		return render_template("home.html", ans=ans, heading="Search Results")
 	
 	query = f"SELECT TOP 5 categories, count(*) as categories_count FROM books GROUP BY categories ORDER BY categories_count DESC"
 	top_5_categories = db.session.execute(text(query))
-	return render_template("search.html", top_5_categories=top_5_categories)
+	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
 @app.route("/details/<isbn>")
 def details(isbn):
