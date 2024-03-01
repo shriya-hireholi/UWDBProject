@@ -53,7 +53,7 @@
     	{% for review in reviews %}
     		<li class="list-group-item text-center m-3">
 				{{ review[2] }} rated it {{ review[0] }}&#9733; and said {{ review[1] }}
-				{% if uid %}
+				{% if uid == review[4] %}
 					<tr>
 						<td>
 							<a href="{{ url_for('delete', review_id=review[3], isbn=res[0], is_active=is_active)}}">Delete</a>

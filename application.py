@@ -108,15 +108,11 @@ def search_page():
 
 def get_reviews_query(username, isbn):
 	query=text("""
-			SELECT rating, review, username, reviews.review_id 
+			SELECT rating, review, username, reviews.review_id, User_Rating.user_id
 			FROM Reviews 
 			JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id 
 			JOIN User_Rating ON Reviews.review_id = User_Rating.review_id 
-			JOIN (
-				SELECT user_id, username 
-				FROM Users 
-				WHERE username LIKE :username
-			) AS Subquery ON Subquery.user_id = User_Rating.user_id 
+			JOIN Users ON User_Rating.user_id = Users.user_id
 			WHERE isbn = :isbn;
 		""")
 	result = db.session.execute(query, {"username": username, "isbn": isbn}).fetchall()
