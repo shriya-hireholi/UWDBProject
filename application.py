@@ -195,7 +195,13 @@ def delete(review_id):
 
 @app.route('/update/<review_id>', methods=['GET', 'POST'])
 def update(review_id):
-    return
+	isbn=request.args.get("isbn")
+	is_active = request.args.get('is_active') == "True"
+	updated_review = request.args.get('updated_review')
+	query=f"UPDATE reviews SET review = {updated_review} WHERE review_id={review_id};"
+	db.session.execute(text(query))
+	db.session.commit()
+	return redirect(url_for('details', isbn=isbn, is_active=is_active))
 
 if __name__ == "__main__":
 	app.run(debug=True)
