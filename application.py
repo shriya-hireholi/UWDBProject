@@ -107,10 +107,8 @@ def search_page():
 
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
-	is_active = True
+	is_active = request.args.get('is_active') == "True"
 	username = get_session_username()
-	if username is None:
-		is_active = False
 
 	query = f"SELECT * FROM books WHERE isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
@@ -138,6 +136,7 @@ def details(isbn):
 				VALUES ({review_id}, {user_id})
 			"""
 			db.session.execute(text(insert_query_user_rating))
+			db.session.commit()
 
 			insert_query_book_rating = f"""
 				INSERT INTO Book_Rating (review_id, isbn)
@@ -148,11 +147,11 @@ def details(isbn):
 			db.session.commit()
 		
 		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
-		return redirect(url_for('details', isbn=isbn, is_active=is_active))
+		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active))
 
 	reviews_query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn} ORDER BY Reviews.review_id DESC" 
 	reviews = db.session.execute(text(reviews_query)).fetchall()
-	return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
+	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active)
 	
 @app.route("/logout")
 def logout():

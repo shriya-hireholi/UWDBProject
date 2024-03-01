@@ -8,7 +8,7 @@
 	<div class="container">
 		{% for data in ans %}
 		<div class="book">
-			<a href="{{ url_for('details', isbn=data[0]) }}"><img src="{{ data[3] }}" alt="Book 1"></a>
+			<a href="{{ url_for('details', isbn=data[0], is_active=is_active)}}"><img src="{{ data[3] }}" alt="Book 1"></a>
 			<div class="book-title">{{ data[1]}}</div>
 		</div>
 		{% endfor %}

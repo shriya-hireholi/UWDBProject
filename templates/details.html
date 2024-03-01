@@ -28,24 +28,24 @@
 		</tr>
 	</table>
 	{% if is_active %}
-	<form class="form-example" action="{{ url_for('details', isbn=res[0]) }}" method="post">
-    	<h6>Review this Book:</h6>
-    	<div class="form-group">
-	    	<label>Rating:</label>
-	    	<select class="form-control" name="rating">
-				<option value="1">1</option>
-				<option value="2">2</option>
-				<option value="3">3</option>
-				<option value="4">4</option>
-				<option value="5">5</option>
-			</select>
-		</div>
-		<div class="form-group">
-			<label>Write a Review:</label>
-	        <textarea class="form-control" name="content" rows="4"></textarea>
-    	</div>
-        <button type="submit" class="btn btn-primary">Submit Review</button>
-    </form>
+		<form class="form-example" action="{{ url_for('details', isbn=res[0], is_active=is_active) }}" method="post">
+			<h6>Review this Book:</h6>
+			<div class="form-group">
+				<label>Rating:</label>
+				<select class="form-control" name="rating">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label>Write a Review:</label>
+				<textarea class="form-control" name="content" rows="4"></textarea>
+			</div>
+			<button type="submit" class="btn btn-primary">Submit Review</button>
+		</form>
 	{% endif %}
     <br/>
     <div class="container">
