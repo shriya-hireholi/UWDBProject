@@ -1,5 +1,4 @@
-import requests
-from flask import Flask, session, render_template, request, redirect, jsonify, url_for
+from flask import session, render_template, request, redirect, url_for
 from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
@@ -10,23 +9,24 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+
+# Checks session username and redirects to the home page
 @app.route("/")
-# Checks session username
 def check_user_session():
 	is_logged_in = False
 	if session.get("username") is not None:
 		is_logged_in = True
 	return redirect(url_for('home_page', is_active=is_logged_in))
 
-# Retrives session username
+# Retrieves session username
 def get_session_username():
 	username = ""
 	if session.get("username") is not None:
 		username = session.get("username")
 	return username
 
+# Home Page - that lists all the books
 @app.route("/temp_home", methods=["GET", "POST"])
-# Displays 10 books on the home page
 def home_page():
 	username = get_session_username()
 	is_active = request.args.get('is_active') == "True"
@@ -34,8 +34,9 @@ def home_page():
 	get_top_10_books = db.session.execute(text(query))
 	return render_template("home.html", ans=get_top_10_books, is_active=is_active, heading="Book List", name=username)
 
-@app.route("/login", methods=["GET", "POST"])
+
 # Enables the login functionality
+@app.route("/login", methods=["GET", "POST"])
 def login_page():
 	session.clear()
 	if request.method == "POST":
@@ -50,8 +51,9 @@ def login_page():
 			return(redirect(url_for('signup_page')))
 	return render_template("login.html")
 
-@app.route("/signup", methods=["GET", "POST"])
+
 # Enables the sign up functionality
+@app.route("/signup", methods=["GET", "POST"])
 def signup_page():
 	if request.method == "POST":
 		user_name = request.form.get("name")
@@ -64,6 +66,8 @@ def signup_page():
 			return redirect(url_for('home_page', is_active=True))
 	return render_template("signup.html")
 
+
+# Query for search functionality to get the books based on the specified parameters
 def query_books(isbn, title, author, categories):
 	if not isbn and not title and not author and not categories:
 		return []
@@ -92,6 +96,8 @@ def query_books(isbn, title, author, categories):
 			)
 	return db.session.execute(query, params).fetchall()
 
+
+# Search functionality on Books and Authors based on isbn, title, author name or categories.
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
 	username = get_session_username()
@@ -103,12 +109,14 @@ def search_page():
 		ans = query_books(isbn, title, author, categories)
 		return render_template("home.html", ans=ans, heading="Search Results")
 	
+	# Fetches top 5 genres of the books based on the  number of times they appear in the database.
 	query = f"SELECT TOP 5 categories, count(*) as categories_count FROM books GROUP BY categories ORDER BY categories_count DESC"
 	top_5_categories = db.session.execute(text(query))
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
+
+# Updates average_rating whenever user enters rating for a book
 def update_average_rating(isbn):
-	# Updates average_rating whenever user enters rating for a book
     average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
     average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
 
@@ -117,6 +125,7 @@ def update_average_rating(isbn):
     db.session.commit()
 
 
+# Returns reviews of the given book isbn
 def get_reviews_query(isbn):
 	query=text("""
 			SELECT rating, review, username, reviews.review_id, User_Rating.user_id
@@ -129,15 +138,20 @@ def get_reviews_query(isbn):
 	result = db.session.execute(query, {"isbn": isbn}).fetchall()
 	return result
 
+
+# Books details page
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
+	"""
+		Displays the details of a specific book and its reviews.
+	"""
 
 	is_active = request.args.get('is_active') == "True"
 	username = get_session_username() or None
 	user_id = None
 
-	# Fetches all the rows from books relation
-	query = f"SELECT * FROM books WHERE isbn={isbn}"
+	# Fetches all the rows from books and authors relation
+	query = f"SELECT * FROM books JOIN authors ON books.isbn = authors.isbn WHERE books.isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
 
 	# If user is logged in retrieve corresponding user_id
@@ -145,19 +159,23 @@ def details(isbn):
 		user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
 		user_id = db.session.execute(text(user_id_query)).fetchone()[0]
 
-	# Fetch review for a mentioned book
+	# Fetch reviews for a mentioned book
 	reviews = get_reviews_query(isbn)
 
 	# If review is entered by the user
 	if request.method == "POST":
-		# Fetch ratings and reviews
+		"""
+			First checks if  user is already rated this book.
+			If not then inserts new  row into Review, Book_Rating, User_Rating table with given data
+			And redirects back to the details page with updated data
+		"""
+
 		query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
 		result = db.session.execute(text(query)).fetchall()
-		# If no rating/review is found, user can input their rating/review
+
 		if not result:
 			rating = request.form.get("rating")
 			review = request.form.get("content")
-			# Reviews relation is updated
 			insert_query = f"""
 				INSERT INTO Reviews (rating, review)
 				VALUES ({rating}, '{review}')
@@ -168,7 +186,6 @@ def details(isbn):
 			get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
 			review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
 
-			# User_Rating and Book_Rating are updated
 			insert_query_user_rating = f"""
 				INSERT INTO User_Rating (review_id, user_id)
 				VALUES ({review_id}, {user_id})
@@ -183,16 +200,19 @@ def details(isbn):
 			db.session.commit()
 
 			update_average_rating(isbn)
-		# Redirect to details to display any changes
+
 		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
-	# Display details of the specific book
 	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active, uid=user_id)
 	
+
+# Logs out of the system
 @app.route("/logout")
 def logout():
 	session.clear()
 	return redirect("/")
 
+
+# Delete functionality for review based on review_id
 @app.route('/delete/<review_id>', methods=['GET', 'POST'])
 def delete(review_id):
 	isbn=request.args.get("isbn")
@@ -203,6 +223,7 @@ def delete(review_id):
 	return redirect(url_for('details', isbn=isbn, is_active=is_active))
 
 
+# Update functionality for review based on review_id
 @app.route('/update/<review_id>', methods=['GET', 'POST'])
 def update(review_id):
 	isbn=request.args.get("isbn")
