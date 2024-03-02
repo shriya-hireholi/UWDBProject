@@ -145,12 +145,12 @@ def details(isbn):
 		if not result:
 			rating = request.form.get("rating")
 			review = request.form.get("content")
+			db.session.begin()
 			insert_query = f"""
 				INSERT INTO Reviews (rating, review)
 				VALUES ({rating}, '{review}')
 			"""
 			db.session.execute(text(insert_query))
-			db.session.commit()
 
 			get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
 			review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
@@ -160,7 +160,6 @@ def details(isbn):
 				VALUES ({review_id}, {user_id})
 			"""
 			db.session.execute(text(insert_query_user_rating))
-			db.session.commit()
 
 			insert_query_book_rating = f"""
 				INSERT INTO Book_Rating (review_id, isbn)
