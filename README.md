@@ -1,32 +1,27 @@
-# Book Review
+# Book Review System
 
+### Description
 <p>A book review website. Users will be able to register in the website and then log in using their username and password.</p>
 <p>Once they log in, they will be able to search for books, leave reviews for individual books, and see the reviews made by other people.</p>
-<p>Also a third-party API by Goodreads, another book review website, has been used, to pull in ratings from a broader audience.</p>
-<p>Finally, users will be able to query for book details and book reviews programmatically via the website’s API and will get a json response if valid else an error.</p>
+<p>Finally, users will be able to query for book details and book reviews programmatically via the website’s API and will get a json response.</p>
+
+### Database Used
+<p>The project uses Microsoft Azure SQL.</p>
+
+### Project Backbone
+<p>The foundation of the project lies in the Python Flask Framework, complemented by fundamental HTML/CSS and JavaScript for frontend development.</p>
 
 
-## Getting Started
-<ul>
-<li>set environment variable FLASK_APP to be application.py</li>
-<li>set up a postgre database (online(Heroku) or offine) and add the link to the DATABASE_URL environment variable</li>
-<li>run the import.py to setup the database</li>
-<li>flask run, to run on localhost, additionally set FLASK_DEBUG to 1 to enable debugger</li>
-</ul>
 
 ## To run this project
+<ul>
+<li>Clone the repository from GitHub to your local machine.</li>
+<li>Create a virtual  environment using Python's built-in venv module. Activate it by running <code>source venv/bin/activate</code>.</li>
+<li>Install all the dependencies using <code>pip3 install -r requirements.txt</code>.</li>
+<li>Set up a Azure SQL Database and add the values for the variable in the <code>config.py</code> file.</li>
+</ul>
 
-Clone this repo
-
-Create a virtual environment and activate it.
-
-Install all dependencies
-
-```bash
-pip3 install -r requirements.txt
-```
-
-<hr>
+### Now that the Database is set
 
 Run the following command:
 ```bash

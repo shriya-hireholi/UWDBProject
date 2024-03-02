@@ -3,25 +3,43 @@
     <head>
         <title>Books Website</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='main.css')}}">
         <style>
         	.container > h1 {
         		padding: 5%;
         		text-align: center;
         	}
+            body {
+                background: url('../static/images/new_background.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }
         </style>
     </head>
     <body>
         <header>
-            <nav class="navbar fixed-top">
-                <div class="navbar-nav">
-                    <a class="nav-item nav-link" href="/logout">Log Out</a>
+            <nav class="topnav fixed-top d-flex justify-content-between">
+                {% if is_active%}
+                <div class="welcome-text" onclick="window.location.href='/'">
+                    Welcome {{ name }}!
+                </div>
+                {% endif %}
+                <div class="navbar-nav ml-auto d-flex flex-row-reverse">
+                {% if is_active%}
+                    <a class="btn btn-outline-primary" href="/logout">Log Out</a>
+                {% else %}
+                    <a class="btn btn-outline-primary" href="{{ url_for('login_page') }}">Login/Sign Up</a>
+                {% endif %}
+                <a class="btn btn-outline-primary mr-2" href="/search">Search</a>
                 </div>
             </nav>
         </header>
-    	<div class="container">
+    	<div class="container" style="display: flex; flex-direction: column;">
 	    	<h1>{% block heading %}{% endblock %}</h1>
 	    	
-	    	{% block body %}
+	    	{% block body %} 
 		    {% endblock %}
 	    </div>
     </body>
