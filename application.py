@@ -12,12 +12,14 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 @app.route("/")
+# Checks session username
 def check_user_session():
 	is_logged_in = False
 	if session.get("username") is not None:
 		is_logged_in = True
 	return redirect(url_for('home_page', is_active=is_logged_in))
 
+# Retrives session username
 def get_session_username():
 	username = ""
 	if session.get("username") is not None:
@@ -25,6 +27,7 @@ def get_session_username():
 	return username
 
 @app.route("/temp_home", methods=["GET", "POST"])
+# Displays 10 books on the home page
 def home_page():
 	username = get_session_username()
 	is_active = request.args.get('is_active') == "True"
@@ -33,9 +36,9 @@ def home_page():
 	return render_template("home.html", ans=get_top_10_books, is_active=is_active, heading="Book List", name=username)
 
 @app.route("/login", methods=["GET", "POST"])
+# Enables the login functionality
 def login_page():
 	session.clear()
-
 	if request.method == "POST":
 		user_name = request.form.get("name")
 		user_password = request.form.get("pwd")
@@ -49,8 +52,8 @@ def login_page():
 	return render_template("login.html")
 
 @app.route("/signup", methods=["GET", "POST"])
+# Enables the sign up functionality
 def signup_page():
-
 	if request.method == "POST":
 		user_name = request.form.get("name")
 		user_password = request.form.get("pwd")
@@ -92,7 +95,6 @@ def query_books(isbn, title, author, categories):
 
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
-	add_last_50_rows()
 	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
@@ -107,6 +109,7 @@ def search_page():
 	return render_template("search.html", top_5_categories=top_5_categories, name=username)
 
 def update_average_rating(isbn):
+	# Updates average_rating whenever user enters rating for a book
     average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
     average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
 
@@ -129,34 +132,44 @@ def get_reviews_query(isbn):
 
 @app.route("/details/<isbn>", methods=["GET", "POST"])
 def details(isbn):
+
 	is_active = request.args.get('is_active') == "True"
 	username = get_session_username() or None
 	user_id = None
 
+	# Fetches all the rows from books relation
 	query = f"SELECT * FROM books WHERE isbn={isbn}"
 	ans = db.session.execute(text(query)).fetchone()
 
+	# If user is logged in retrieve corresponding user_id
 	if username:
 		user_id_query = f"SELECT user_id from Users where username LIKE '%{username}%'"
 		user_id = db.session.execute(text(user_id_query)).fetchone()[0]
 
+	# Fetch review for a mentioned book
 	reviews = get_reviews_query(isbn)
+
+	# If review is entered by the user
 	if request.method == "POST":
+		# Fetch ratings and reviews
 		query = f"SELECT rating, review FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id JOIN User_Rating ON Reviews.review_id = User_Rating.review_id WHERE user_id = {user_id} AND isbn = {isbn}"
 		result = db.session.execute(text(query)).fetchall()
+		# If no rating/review is found, user can input their rating/review
 		if not result:
 			rating = request.form.get("rating")
 			review = request.form.get("content")
+			# Reviews relation is updated
 			insert_query = f"""
 				INSERT INTO Reviews (rating, review)
 				VALUES ({rating}, '{review}')
 			"""
 			db.session.execute(text(insert_query))
 			db.session.commit()
-
+			
 			get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
 			review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
 
+			# User_Rating and Book_Rating are updated
 			insert_query_user_rating = f"""
 				INSERT INTO User_Rating (review_id, user_id)
 				VALUES ({review_id}, {user_id})
@@ -172,27 +185,15 @@ def details(isbn):
 			db.session.commit()
 
 			update_average_rating(isbn)
-		
-		#return render_template("details.html", res=ans, reviews=reviews, is_active=is_active)
+		# Redirect to details to display any changes
 		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
-
+	# Display details of the specific book
 	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active, uid=user_id)
 	
 @app.route("/logout")
 def logout():
 	session.clear()
 	return redirect("/")
-
-@app.route("/api/<isbn>", methods=['GET'])
-def api(isbn):
-	# query = f
-	row = db.execute("SELECT name, author, year, books.isbn, COUNT(reviews.id) as review_count, AVG(CAST(reviews.rating AS INTEGER)) as average_score FROM books INNER JOIN reviews ON books.isbn = reviews.isbn WHERE books.isbn = :isbn GROUP BY name, author, year, books.isbn", {"isbn": isbn})
-	if row.rowcount != 1:
-		return jsonify({"Error": "No Data for this isbn"}), 422
-	tmp = row.fetchone()
-	result = dict(tmp.items())
-	result['average_score'] = float('%.1f'%(result['average_score']))
-	return jsonify(result)
 
 @app.route('/delete/<review_id>', methods=['GET', 'POST'])
 def delete(review_id):
