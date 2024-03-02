@@ -27,7 +27,6 @@
 					<p>{{ res[4] }}</p>
 				</div>
                 <p>{{ res[6] }}</p>
-                <!-- Add more details as needed -->
 				{% if is_active %}
 					<form class="form-example" action="{{ url_for('details', isbn=res[0], is_active=is_active) }}" method="post">
 						<h6>Review this Book:</h6>
@@ -56,7 +55,7 @@
 							{% for review in reviews %}
 							<li class="list-group-item" style="border: none">
 								<div class="row">
-								<!-- Reviewer (Left Column) -->
+								<!-- Reviewer name -->
 								<div class="col-md-3">
 									{{ review[2] }}
 								</div>
@@ -74,8 +73,6 @@
 									{% if uid == review[4] %}
 									<div style="margin: 5px 0px; display: flex; align-items: center;">
 										<a href="{{ url_for('delete', review_id=review[3], isbn=res[0], is_active=is_active)}}" class="mr-2" title="Delete"><i class="fas fa-trash"></i></a>
-										<!-- <a href="{{ url_for('update', review_id=review[3], isbn=res[0], is_active=is_active)}}" title="Update"><i class="fas fa-edit"></i></a> -->
-										<!-- <button onclick="toggleEdit('{{ review[3] }}')"><i class="fas fa-edit"></i></button> -->
 										<a href="#" onclick="toggleEdit('{{ review[3] }}', '{{ res[0] }}', '{{ is_active }}')" class="btn btn-link btn-sm" title="Update"><i class="fas fa-edit"></i></a>
 									</div>
 									{% endif %}
@@ -98,48 +95,59 @@
     </div>
 	<script>
 		function toggleEdit(reviewId, isbn, is_active) {
+			// to prevent anchor tag default action
 			event.preventDefault();
+			// Getting element of the review content
 			var reviewContent = document.getElementById('review' + reviewId + 'Content');
 			var updateButton = document.querySelector('[onclick="toggleEdit(\'' + reviewId + '\', \'' + isbn + '\', \'' + is_active + '\')"]');
+			// Checking if the review content is currently displayed as text or textarea
 			var isText = reviewContent.classList.contains('text-content');
 
 			if (isText) {
+				// If currently displayed as text, switch to textarea for editing
 				var reviewText = reviewContent.textContent.trim();
 
+				// Replace the review content text with an editable textarea
 				var textarea = document.createElement('textarea');
 				textarea.id = 'editReview' + reviewId;
 				textarea.classList.add('form-control');
 				textarea.textContent = reviewText;
 				reviewContent.innerHTML = '';
 				reviewContent.appendChild(textarea);
+				// Change the button icon to "Cancel"
 				updateButton.innerHTML = '<i class="fas fa-times"></i>';
 				textarea.focus();
 				textarea.addEventListener('keypress', function(event) {
+					// Enter key pressed
 					if (event.keyCode === 13) {
 						event.preventDefault();
 						submitReview(reviewId, isbn, is_active);
 					}
             	});
 			} else {
+				// If currently displayed as textarea, switch back to text
 				var textarea = document.getElementById('editReview' + reviewId);
 				if (textarea) {
 					var reviewText = textarea.value.trim();
 					reviewContent.textContent = reviewText;
 				}
-
+				// Change the button icon back to "Update"
 				updateButton.innerHTML = '<i class="fas fa-edit"></i>';
 			}
+			// Toggle the class to switch between text and textarea styling
 			reviewContent.classList.toggle('text-content');
 		}
 
 		function submitReview(reviewId, isbn, is_active) {
 			var reviewContent = document.getElementById('editReview' + reviewId);
 			var newText;
+			// Get the new edited text from the text area
 			if (reviewContent.tagName.toLowerCase() === 'textarea') {
 				newText = reviewContent.value.trim();
 			} else {
 				newText = reviewContent.textContent.trim();
 			}
+			// Passing the updated review to backend and page reload following successful response
 			var url = 'http://127.0.0.1:5000/update/' + reviewId + '?isbn=' + isbn + '&is_active=' + is_active;
 			fetch(url, {
 			method: 'POST',
@@ -152,7 +160,8 @@
 				if (!response.ok) {
 					throw new Error('Network response was not ok');
 				}
-				location.reload()
+				// Page reload to reflect the updated review message
+				location.reload();
 			})
 			.catch(error => {
 				console.error('There was a problem with the fetch operation:', error);
