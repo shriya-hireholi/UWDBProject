@@ -117,7 +117,7 @@ def search_page():
 
 # Updates average_rating whenever user enters rating for a book
 def update_average_rating(isbn):
-    average_rating_query = f"SELECT AVG(rating) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
+    average_rating_query = f"SELECT ROUND(AVG(CAST(rating AS FLOAT)), 2) FROM Reviews JOIN Book_Rating ON Reviews.review_id = Book_Rating.review_id WHERE Book_Rating.isbn = {isbn}"
     average_rating = db.session.execute(text(average_rating_query)).fetchone()[0]
 
     update_average_rating_query = f"UPDATE Books SET average_rating = {average_rating} WHERE isbn = {isbn}"
@@ -220,6 +220,9 @@ def delete(review_id):
 	query=f"DELETE FROM reviews where review_id={review_id};"
 	db.session.execute(text(query))
 	db.session.commit()
+
+	update_average_rating(isbn)
+
 	return redirect(url_for('details', isbn=isbn, is_active=is_active))
 
 
