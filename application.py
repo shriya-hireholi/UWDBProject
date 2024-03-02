@@ -3,9 +3,8 @@ from flask import Flask, session, render_template, request, redirect, jsonify, u
 from flask_session import Session
 from db_connection import db, app
 from sqlalchemy import text
-from flask import abort
-import pandas as pd
-from sqlalchemy.exc import IntegrityError
+
+
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -31,7 +30,7 @@ def get_session_username():
 def home_page():
 	username = get_session_username()
 	is_active = request.args.get('is_active') == "True"
-	query = f"SELECT TOP 10 * FROM books ORDER BY average_rating DESC;"
+	query = f"SELECT * FROM books ORDER BY average_rating DESC;"
 	get_top_10_books = db.session.execute(text(query))
 	return render_template("home.html", ans=get_top_10_books, is_active=is_active, heading="Book List", name=username)
 
@@ -175,7 +174,6 @@ def details(isbn):
 				VALUES ({review_id}, {user_id})
 			"""
 			db.session.execute(text(insert_query_user_rating))
-			db.session.commit()
 
 			insert_query_book_rating = f"""
 				INSERT INTO Book_Rating (review_id, isbn)
@@ -209,10 +207,11 @@ def delete(review_id):
 def update(review_id):
 	isbn=request.args.get("isbn")
 	is_active = request.args.get('is_active') == "True"
-	updated_review = request.args.get('updated_review')
-	query=f"UPDATE reviews SET review = {updated_review} WHERE review_id={review_id};"
-	db.session.execute(text(query))
-	db.session.commit()
+	if request.method == "POST":
+		updated_review = request.get_json().get('updated_review')
+		query=f"UPDATE reviews SET review = '{updated_review}' WHERE review_id={review_id};"
+		db.session.execute(text(query))
+		db.session.commit()
 	return redirect(url_for('details', isbn=isbn, is_active=is_active))
 
 if __name__ == "__main__":
