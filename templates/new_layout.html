@@ -32,7 +32,7 @@
                 {% else %}
                     <a class="btn btn-outline-primary" href="{{ url_for('login_page') }}">Login/Sign Up</a>
                 {% endif %}
-                <a class="btn btn-outline-primary mr-2" href="/search">Search</a>
+                <a class="btn btn-outline-primary mr-2" href="{{ url_for('search_page', is_active=is_active) }}">Search</a>
                 </div>
             </nav>
         </header>

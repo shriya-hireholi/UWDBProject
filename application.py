@@ -49,7 +49,7 @@ def login_page():
 			return redirect(url_for('home_page', is_active=True))
 		else:
 			return(redirect(url_for('signup_page')))
-	return render_template("login.html")
+	return render_template("login.html", is_active=False)
 
 
 # Enables the sign up functionality
@@ -64,7 +64,7 @@ def signup_page():
 			db.session.commit()
 			session["username"] = user_name
 			return redirect(url_for('home_page', is_active=True))
-	return render_template("signup.html")
+	return render_template("signup.html", is_active=False)
 
 
 # Query for search functionality to get the books based on the specified parameters
@@ -100,6 +100,7 @@ def query_books(isbn, title, author, categories):
 # Search functionality on Books and Authors based on isbn, title, author name or categories.
 @app.route("/search", methods=["GET", "POST"])
 def search_page():
+	is_active = request.args.get('is_active') == "True"
 	username = get_session_username()
 	if request.method == "POST":
 		isbn = request.form.get("isbn")
@@ -107,12 +108,12 @@ def search_page():
 		author = request.form.get("author")
 		categories = request.form.get("categories")
 		ans = query_books(isbn, title, author, categories)
-		return render_template("home.html", ans=ans, heading="Search Results")
+		return render_template("home.html", ans=ans, heading="Search Results", is_active=is_active, name=username)
 	
 	# Fetches top 5 genres of the books based on the  number of times they appear in the database.
 	query = f"SELECT TOP 5 categories, count(*) as categories_count FROM books GROUP BY categories ORDER BY categories_count DESC"
 	top_5_categories = db.session.execute(text(query))
-	return render_template("search.html", top_5_categories=top_5_categories, name=username)
+	return render_template("search.html", top_5_categories=top_5_categories, name=username, is_active=is_active)
 
 
 # Updates average_rating whenever user enters rating for a book
@@ -180,26 +181,31 @@ def details(isbn):
 				INSERT INTO Reviews (rating, review)
 				VALUES ({rating}, '{review}')
 			"""
-			db.session.execute(text(insert_query))
-			db.session.commit()
-			
-			get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
-			review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
+			try:
+				db.session.execute(text(insert_query))
+				db.session.commit()
+				
+				get_review_id_query = f"SELECT TOP 1 review_id FROM Reviews ORDER BY review_id DESC"
+				review_id = db.session.execute(text(get_review_id_query)).fetchone()[0]
 
-			insert_query_user_rating = f"""
-				INSERT INTO User_Rating (review_id, user_id)
-				VALUES ({review_id}, {user_id})
-			"""
-			db.session.execute(text(insert_query_user_rating))
+				insert_query_user_rating = f"""
+					INSERT INTO User_Rating (review_id, user_id)
+					VALUES ({review_id}, {user_id})
+				"""
+				db.session.execute(text(insert_query_user_rating))
+				db.session.commit()
 
-			insert_query_book_rating = f"""
-				INSERT INTO Book_Rating (review_id, isbn)
-				VALUES ({review_id}, '{isbn}')
-			"""
-			db.session.execute(text(insert_query_book_rating))
-			db.session.commit()
+				insert_query_book_rating = f"""
+					INSERT INTO Book_Rating (review_id, isbn)
+					VALUES ({review_id}, '{isbn}')
+				"""
+				db.session.execute(text(insert_query_book_rating))
+				db.session.commit()
 
-			update_average_rating(isbn)
+				update_average_rating(isbn)
+			except  Exception as e:
+				db.session.rollback()
+				print("Error occured: ", e)
 
 		return redirect(url_for('details', isbn=isbn, name=username, is_active=is_active, uid=user_id))
 	return render_template("details.html", res=ans, reviews=reviews, name=username, is_active=is_active, uid=user_id)
