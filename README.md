@@ -18,6 +18,8 @@
 <li>Clone the repository from GitHub to your local machine.</li>
 <li>Create a virtual  environment using Python's built-in venv module. Activate it by running <code>source venv/bin/activate</code>.</li>
 <li>Install all the dependencies using <code>pip3 install -r requirements.txt</code>.</li>
+<li>Download the ODBC driver for SQL server into your laptop from <code>https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16
+</code></li>
 <li>Set up a Azure SQL Database and add the values for the variable in the <code>config.py</code> file.</li>
 </ul>
 

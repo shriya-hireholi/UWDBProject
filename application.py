@@ -182,7 +182,6 @@ def details(isbn):
 				VALUES ({rating}, '{review}')
 			"""
 			try:
-				# db.session.begin()
 				db.session.execute(text(insert_query))
 				db.session.commit()
 				

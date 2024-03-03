@@ -1,6 +1,6 @@
-USERNAME = "team7admin"
-PASSWORD = "#Welcome123"
+USERNAME = ""
+PASSWORD = ""
 
-SERVER = "uwprojects.database.windows.net"
-DATABASE_NAME = "BookReviewSystem"
-CONNECTION_STRING = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:"+SERVER+",1433;Database="+DATABASE_NAME+";Uid="+USERNAME+";Pwd="+PASSWORD+";Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+SERVER = ""
+DATABASE_NAME = ""
+CONNECTION_STRING = "Driver={/opt/homebrew/lib/libmsodbcsql.18.dylib};Server=tcp:"+SERVER+",1433;Database="+DATABASE_NAME+";Uid="+USERNAME+";Pwd="+PASSWORD+";Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
